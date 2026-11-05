@@ -2,7 +2,6 @@ package com.furni3d.app.furni3d_mobile
 
 import android.os.Build
 import android.os.Bundle
-import android.view.View
 import android.view.WindowInsets
 import android.view.WindowInsetsController
 import android.view.WindowManager
@@ -12,8 +11,8 @@ import io.flutter.embedding.android.FlutterActivity
 class MainActivity : FlutterActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Ensure Android window reserves space for status bar and navigation bar
-        WindowCompat.setDecorFitsSystemWindows(window, true)
+        // Keep decorFitsSystemWindows false so Flutter receives window insets for SafeArea and MediaQuery
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         ensureSystemBarsVisible()
     }
 
@@ -33,17 +32,14 @@ class MainActivity : FlutterActivity() {
         window.clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
         window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
         window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            WindowCompat.setDecorFitsSystemWindows(window, true)
             val insetsController = window.insetsController
             if (insetsController != null) {
                 insetsController.show(WindowInsets.Type.statusBars() or WindowInsets.Type.navigationBars())
                 insetsController.systemBarsBehavior = WindowInsetsController.BEHAVIOR_DEFAULT
             }
-        } else {
-            @Suppress("DEPRECATION")
-            window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_VISIBLE
         }
     }
 }

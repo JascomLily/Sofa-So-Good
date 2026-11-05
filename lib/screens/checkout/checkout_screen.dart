@@ -412,15 +412,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       ],
     );
 
-    // Tich luy FurniCoins (1 Xu / 50k, toi thieu 10 Xu, toi da 50 Xu)
-    final earnedCoins = (finalTotal / 50000).clamp(10, 50).round();
-
     orderProvider.addOrder(newOrder, userId: auth.currentUser?.id);
-
-    if (coinsDeducted > 0) {
-      auth.deductCoins(coinsDeducted);
-    }
-    auth.addCoins(earnedCoins);
 
     cart.clearCart();
 
@@ -498,7 +490,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   backgroundColor: AppTheme.textPrimary,
-                  content: Text('Giao dịch chưa hoàn tất. Giỏ hàng và số dư FurniCoins của bạn được giữ nguyên vẹn (Rollback an toàn).'),
+                  content: Text('Giao dịch chưa hoàn tất. Giỏ hàng và ưu đãi của bạn được giữ nguyên vẹn (Rollback an toàn).'),
                   duration: Duration(seconds: 3),
                 ),
               );

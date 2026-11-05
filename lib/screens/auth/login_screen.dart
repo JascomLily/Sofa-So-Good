@@ -1,3 +1,6 @@
+import 'package:flutter/services.dart';
+import '../main_navigation_screen.dart';
+import '../admin/admin_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -8,8 +11,9 @@ import 'forgot_password_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   final VoidCallback? onLoginSuccess;
+  final bool isRootScreen;
 
-  const LoginScreen({super.key, this.onLoginSuccess});
+  const LoginScreen({super.key, this.onLoginSuccess, this.isRootScreen = false});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -63,7 +67,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       final auth = Provider.of<AuthProvider>(context, listen: false);
-      final success = await auth.login(email, password);
+      final success = await auth.login(email, password, rememberMe: _rememberMe);
 
       if (success && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -74,7 +78,21 @@ class _LoginScreenState extends State<LoginScreen> {
         );
         if (widget.onLoginSuccess != null) {
           widget.onLoginSuccess!();
-        } else if (Navigator.canPop(context)) {
+        } else if (widget.isRootScreen || !Navigator.canPop(context)) {
+          if (auth.isAdmin) {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (_) => const AdminScreen()),
+              (route) => false,
+            );
+          } else {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (_) => const MainNavigationScreen()),
+              (route) => false,
+            );
+          }
+        } else {
           Navigator.pop(context);
         }
       }
@@ -104,7 +122,21 @@ class _LoginScreenState extends State<LoginScreen> {
         );
         if (widget.onLoginSuccess != null) {
           widget.onLoginSuccess!();
-        } else if (Navigator.canPop(context)) {
+        } else if (widget.isRootScreen || !Navigator.canPop(context)) {
+          if (auth.isAdmin) {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (_) => const AdminScreen()),
+              (route) => false,
+            );
+          } else {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (_) => const MainNavigationScreen()),
+              (route) => false,
+            );
+          }
+        } else {
           Navigator.pop(context);
         }
       } else {
@@ -153,11 +185,12 @@ class _LoginScreenState extends State<LoginScreen> {
       });
     }
 
-    return Scaffold(
+    final scaffold = Scaffold(
       backgroundColor: AppTheme.background,
       appBar: AppBar(
-        title: const Text('Đăng Nhập Sofa so good'),
-        leading: Navigator.canPop(context)
+        automaticallyImplyLeading: !widget.isRootScreen,
+        title: const Text('Đăng nhập SOFA SO GOOD'),
+        leading: (!widget.isRootScreen && Navigator.canPop(context))
             ? IconButton(
                 icon: const Icon(Icons.arrow_back),
                 onPressed: () => Navigator.pop(context),
@@ -348,7 +381,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   icon: const Icon(Icons.person_add_outlined, size: 18),
                   label: const Text(
-                    'Đăng ký tài khoản mới (+100 Xu)',
+                    'Đăng ký tài khoản mới',
                     style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                   ),
                   onPressed: () {
@@ -384,5 +417,18 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       ),
     );
+
+    if (widget.isRootScreen) {
+      return PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, _) {
+          if (!didPop) {
+            SystemNavigator.pop();
+          }
+        },
+        child: scaffold,
+      );
+    }
+    return scaffold;
   }
 }

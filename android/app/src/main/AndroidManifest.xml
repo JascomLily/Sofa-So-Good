@@ -17,7 +17,8 @@
     <application
         android:label="SOFA SO GOOD"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:usesCleartextTraffic="true">
         <!-- Force Unity to NEVER launch in fullscreen or render outside safearea -->
         <meta-data
             android:name="unity.launch-fullscreen"

@@ -131,6 +131,7 @@ class DriverModel {
 
 class OrderModel {
   final String id;
+  final String? userId;
   final String code;
   final String date;
   final String estimatedDelivery;
@@ -160,6 +161,7 @@ class OrderModel {
 
   OrderModel({
     required this.id,
+    this.userId,
     required this.code,
     required this.date,
     this.estimatedDelivery = 'Hôm nay, 16:30 - 18:30',
@@ -202,8 +204,22 @@ class OrderModel {
   bool get isRejected => orderStatus == OrderStatus.daTuChoi;
   bool get canCustomerCancel => orderStatus == OrderStatus.choDuyet;
 
+  String get displayCode => code.startsWith('#') ? code : '#$code';
+
+  String get paymentStatusVietnamese {
+    final methodUpper = paymentMethod.toUpperCase();
+    final isPaid = paymentStatus.toUpperCase() == 'PAID' || orderStatus == OrderStatus.giaoThanhCong;
+    if (methodUpper.contains('COD')) {
+      return isPaid ? 'Thanh toán khi nhận hàng (COD) – Đã thu tiền' : 'Thanh toán khi nhận hàng (COD) – Chưa thanh toán';
+    } else if (methodUpper.contains('VNPAY')) {
+      return isPaid ? 'Đã thanh toán (Cổng VNPAY)' : 'Chờ thanh toán (VNPAY)';
+    }
+    return isPaid ? 'Đã thanh toán' : 'Chưa thanh toán';
+  }
+
   Map<String, dynamic> toJson() => {
         'id': id,
+        'userId': userId,
         'code': code,
         'date': date,
         'estimatedDelivery': estimatedDelivery,
@@ -229,4 +245,113 @@ class OrderModel {
         'linkedReturnRequestId': linkedReturnRequestId,
         'statusHistory': statusHistory,
       };
+
+  factory OrderModel.fromJson(Map<String, dynamic> json) {
+    return OrderModel(
+      id: json['id'] ?? '',
+      userId: json['userId'],
+      code: json['code'] ?? '',
+      date: json['date'] ?? '',
+      estimatedDelivery: json['estimatedDelivery'] ?? 'Hôm nay, 16:30 - 18:30',
+      totalAmount: (json['totalAmount'] as num?)?.toInt() ?? 0,
+      paymentMethod: json['paymentMethod'] ?? 'COD',
+      paymentStatus: json['paymentStatus'] ?? 'PENDING',
+      transactionId: json['transactionId'] ?? '',
+      status: json['status'],
+      receiverName: json['receiverName'] ?? '',
+      receiverPhone: json['receiverPhone'] ?? '',
+      shippingAddress: json['shippingAddress'] ?? '',
+      orderNote: json['orderNote'],
+      items: (json['items'] as List<dynamic>? ?? [])
+          .map((i) => OrderItemModel.fromJson(Map<String, dynamic>.from(i)))
+          .toList(),
+      timeline: (json['timeline'] as List<dynamic>? ?? [])
+          .map((t) => TimelineStepModel(
+                id: t['id'] ?? 1,
+                title: t['title'] ?? '',
+                time: t['time'] ?? '',
+                description: t['description'] ?? '',
+                status: t['status'] ?? 'completed',
+              ))
+          .toList(),
+      reviewStars: json['reviewStars'],
+      reviewComment: json['reviewComment'],
+      reviewMedia: (json['reviewMedia'] as List<dynamic>?)?.map((e) => e.toString()).toList(),
+      rejectReason: json['rejectReason'],
+      shippedAt: json['shippedAt'] != null ? DateTime.tryParse(json['shippedAt']) : null,
+      completedAt: json['completedAt'] != null ? DateTime.tryParse(json['completedAt']) : null,
+      stockDeducted: json['stockDeducted'] ?? true,
+      stockReverted: json['stockReverted'] ?? false,
+      isReplacementOrder: json['isReplacementOrder'] ?? false,
+      linkedReturnRequestId: json['linkedReturnRequestId'],
+      statusHistory: (json['statusHistory'] as List<dynamic>?)
+              ?.map((e) => Map<String, dynamic>.from(e))
+              .toList() ??
+          [],
+    );
+  }
+
+
+  OrderModel copyWith({
+    String? id,
+    String? userId,
+    String? code,
+    String? date,
+    String? estimatedDelivery,
+    int? totalAmount,
+    String? paymentMethod,
+    String? paymentStatus,
+    String? transactionId,
+    dynamic status,
+    String? receiverName,
+    String? receiverPhone,
+    String? shippingAddress,
+    String? orderNote,
+    List<OrderItemModel>? items,
+    List<TimelineStepModel>? timeline,
+    DriverModel? driver,
+    int? reviewStars,
+    String? reviewComment,
+    List<String>? reviewMedia,
+    String? rejectReason,
+    DateTime? shippedAt,
+    DateTime? completedAt,
+    bool? stockDeducted,
+    bool? stockReverted,
+    bool? isReplacementOrder,
+    String? linkedReturnRequestId,
+    List<Map<String, dynamic>>? statusHistory,
+  }) {
+    return OrderModel(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      code: code ?? this.code,
+      date: date ?? this.date,
+      estimatedDelivery: estimatedDelivery ?? this.estimatedDelivery,
+      totalAmount: totalAmount ?? this.totalAmount,
+      paymentMethod: paymentMethod ?? this.paymentMethod,
+      paymentStatus: paymentStatus ?? this.paymentStatus,
+      transactionId: transactionId ?? this.transactionId,
+      status: status ?? this.orderStatus,
+      receiverName: receiverName ?? this.receiverName,
+      receiverPhone: receiverPhone ?? this.receiverPhone,
+      shippingAddress: shippingAddress ?? this.shippingAddress,
+      orderNote: orderNote ?? this.orderNote,
+      items: items ?? this.items,
+      timeline: timeline ?? this.timeline,
+      driver: driver ?? this.driver,
+      reviewStars: reviewStars ?? this.reviewStars,
+      reviewComment: reviewComment ?? this.reviewComment,
+      reviewMedia: reviewMedia ?? this.reviewMedia,
+      rejectReason: rejectReason ?? this.rejectReason,
+      shippedAt: shippedAt ?? this.shippedAt,
+      completedAt: completedAt ?? this.completedAt,
+      stockDeducted: stockDeducted ?? this.stockDeducted,
+      stockReverted: stockReverted ?? this.stockReverted,
+      isReplacementOrder: isReplacementOrder ?? this.isReplacementOrder,
+      linkedReturnRequestId: linkedReturnRequestId ?? this.linkedReturnRequestId,
+      statusHistory: statusHistory ?? this.statusHistory,
+    );
+  }
+
 }

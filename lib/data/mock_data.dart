@@ -29,7 +29,7 @@ List<ProductModel> getMockProducts() => [
         price: 1850000,
         originalPrice: 2190000,
         rating: 4.9,
-        reviewCount: 128,
+        reviewCount: 0,
         image:
             'https://images.unsplash.com/photo-1580481077111-9a7f34083049?auto=format&fit=crop&w=800&q=80',
         badge: '3D Ready',
@@ -48,7 +48,7 @@ List<ProductModel> getMockProducts() => [
         price: 2850000,
         originalPrice: 3200000,
         rating: 4.8,
-        reviewCount: 95,
+        reviewCount: 0,
         image:
             'https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?auto=format&fit=crop&w=800&q=80',
         badge: 'Bán chạy',
@@ -67,7 +67,7 @@ List<ProductModel> getMockProducts() => [
         price: 490000,
         originalPrice: 650000,
         rating: 4.7,
-        reviewCount: 114,
+        reviewCount: 0,
         image:
             'https://images.unsplash.com/photo-1503602642458-232111445657?auto=format&fit=crop&w=800&q=80',
         badge: 'Dễ ráp',
@@ -86,7 +86,7 @@ List<ProductModel> getMockProducts() => [
         price: 4850000,
         originalPrice: 5600000,
         rating: 4.9,
-        reviewCount: 86,
+        reviewCount: 0,
         image:
             'https://images.unsplash.com/photo-1595428774223-ef52624120d2?auto=format&fit=crop&w=800&q=80',
         badge: 'Cao cấp',
@@ -105,7 +105,7 @@ List<ProductModel> getMockProducts() => [
         price: 1950000,
         originalPrice: 2350000,
         rating: 4.8,
-        reviewCount: 142,
+        reviewCount: 0,
         image:
             'https://images.unsplash.com/photo-1594026112284-02bb6f3352fe?auto=format&fit=crop&w=800&q=80',
         badge: 'Đa năng',
@@ -124,7 +124,7 @@ List<ProductModel> getMockProducts() => [
         price: 2450000,
         originalPrice: 2890000,
         rating: 4.9,
-        reviewCount: 156,
+        reviewCount: 0,
         image:
             'https://images.unsplash.com/photo-1518455027359-f3f8164ba6bd?auto=format&fit=crop&w=800&q=80',
         badge: '3D Ready',
@@ -143,7 +143,7 @@ List<ProductModel> getMockProducts() => [
         price: 3250000,
         originalPrice: 3800000,
         rating: 4.8,
-        reviewCount: 78,
+        reviewCount: 0,
         image:
             'https://images.unsplash.com/photo-1615066390971-03e4e1c36ddf?auto=format&fit=crop&w=800&q=80',
         badge: 'Gia đình',
@@ -162,7 +162,7 @@ List<ProductModel> getMockProducts() => [
         price: 1150000,
         originalPrice: 1400000,
         rating: 4.9,
-        reviewCount: 110,
+        reviewCount: 0,
         image:
             'https://images.unsplash.com/photo-1532372320572-cda25653a26d?auto=format&fit=crop&w=800&q=80',
         badge: 'Nổi bật',
@@ -181,7 +181,7 @@ List<ProductModel> getMockProducts() => [
         price: 5200000,
         originalPrice: 5900000,
         rating: 4.9,
-        reviewCount: 64,
+        reviewCount: 0,
         image:
             'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=800&q=80',
         badge: 'Mới về',
@@ -200,7 +200,7 @@ List<ProductModel> getMockProducts() => [
         price: 6800000,
         originalPrice: 7500000,
         rating: 5.0,
-        reviewCount: 88,
+        reviewCount: 0,
         image:
             'https://images.unsplash.com/photo-1540518614846-7ede433c4ef7?auto=format&fit=crop&w=800&q=80',
         badge: 'King Size',
@@ -219,7 +219,7 @@ List<ProductModel> getMockProducts() => [
         price: 7400000,
         originalPrice: 8500000,
         rating: 4.9,
-        reviewCount: 42,
+        reviewCount: 0,
         image:
             'https://images.unsplash.com/photo-1558997519-83ea9252def8?auto=format&fit=crop&w=800&q=80',
         badge: 'Sang trọng',
@@ -238,7 +238,7 @@ List<ProductModel> getMockProducts() => [
         price: 2600000,
         originalPrice: 3100000,
         rating: 4.8,
-        reviewCount: 53,
+        reviewCount: 0,
         image:
             'https://images.unsplash.com/photo-1538688525198-9b88f6f53126?auto=format&fit=crop&w=800&q=80',
         badge: 'Gỗ óc chó',
@@ -257,7 +257,7 @@ List<ProductModel> getMockProducts() => [
         price: 3950000,
         originalPrice: 4600000,
         rating: 4.9,
-        reviewCount: 71,
+        reviewCount: 0,
         image:
             'https://images.unsplash.com/photo-1595428774223-ef52624120d2?auto=format&fit=crop&w=800&q=80',
         badge: 'Dung tích lớn',
@@ -276,7 +276,7 @@ List<ProductModel> getMockProducts() => [
         price: 4700000,
         originalPrice: 5500000,
         rating: 4.9,
-        reviewCount: 119,
+        reviewCount: 0,
         image:
             'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80',
         badge: 'Best Seller',
@@ -295,7 +295,7 @@ List<ProductModel> getMockProducts() => [
         price: 8900000,
         originalPrice: 10500000,
         rating: 5.0,
-        reviewCount: 96,
+        reviewCount: 0,
         image:
             'https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?auto=format&fit=crop&w=800&q=80',
         badge: 'Luxury',
@@ -314,7 +314,7 @@ List<ProductModel> getMockProducts() => [
         price: 3600000,
         originalPrice: 4200000,
         rating: 4.8,
-        reviewCount: 62,
+        reviewCount: 0,
         image:
             'https://images.unsplash.com/photo-1577140917170-285929fb55b7?auto=format&fit=crop&w=800&q=80',
         badge: 'Gia đình',
@@ -333,7 +333,7 @@ List<ProductModel> getMockProducts() => [
         price: 750000,
         originalPrice: 950000,
         rating: 4.7,
-        reviewCount: 135,
+        reviewCount: 0,
         image:
             'https://images.unsplash.com/photo-1533090161767-e6ffed986c88?auto=format&fit=crop&w=800&q=80',
         badge: 'Gọn nhẹ',
@@ -352,7 +352,7 @@ List<ProductModel> getMockProducts() => [
         price: 3850000,
         originalPrice: 4500000,
         rating: 4.9,
-        reviewCount: 47,
+        reviewCount: 0,
         image:
             'https://images.unsplash.com/photo-1565793298595-6a879b1d9492?auto=format&fit=crop&w=800&q=80',
         badge: 'Mặt đá',
@@ -371,7 +371,7 @@ List<ProductModel> getMockProducts() => [
         price: 2950000,
         originalPrice: 3500000,
         rating: 4.8,
-        reviewCount: 39,
+        reviewCount: 0,
         image:
             'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=800&q=80',
         badge: 'Kháng nước',

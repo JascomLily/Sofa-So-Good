@@ -59,6 +59,7 @@ extension ReturnClaimStatusExtension on ReturnClaimStatus {
 
 class ReturnRequestModel {
   final String id;
+  final String? userId;
   final String orderCode;
   final String claimType; // 'RETURN' (Hoàn trả) hoặc 'MISSING_PART' (Bổ sung linh kiện)
   final String productName;
@@ -76,6 +77,7 @@ class ReturnRequestModel {
 
   ReturnRequestModel({
     required this.id,
+    this.userId,
     required this.orderCode,
     this.claimType = 'RETURN',
     this.productName = '',
@@ -114,6 +116,7 @@ class ReturnRequestModel {
 
   ReturnRequestModel copyWith({
     String? id,
+    String? userId,
     String? orderCode,
     String? claimType,
     String? productName,
@@ -131,6 +134,7 @@ class ReturnRequestModel {
   }) {
     return ReturnRequestModel(
       id: id ?? this.id,
+      userId: userId ?? this.userId,
       orderCode: orderCode ?? this.orderCode,
       claimType: claimType ?? this.claimType,
       productName: productName ?? this.productName,
@@ -150,6 +154,7 @@ class ReturnRequestModel {
 
   Map<String, dynamic> toJson() => {
         'id': id,
+        'userId': userId,
         'orderCode': orderCode,
         'claimType': claimType,
         'productName': productName,
@@ -165,4 +170,26 @@ class ReturnRequestModel {
         'resolvedAt': resolvedAt?.toIso8601String(),
         'statusHistory': statusHistory,
       };
+
+  factory ReturnRequestModel.fromJson(Map<String, dynamic> json) => ReturnRequestModel(
+        id: json['id'] ?? '',
+        userId: json['userId'],
+        orderCode: json['orderCode'] ?? '',
+        claimType: json['claimType'] ?? 'RETURN',
+        productName: json['productName'] ?? '',
+        partName: json['partName'],
+        quantity: json['quantity'] ?? 1,
+        note: json['note'] ?? '',
+        unboxingVideoUrl: json['unboxingVideoUrl'] ?? '',
+        evidencePhotos: (json['evidencePhotos'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
+        status: json['status'],
+        createdAt: json['createdAt'] ?? '',
+        adminResponse: json['adminResponse'],
+        linkedReplacementOrderCode: json['linkedReplacementOrderCode'],
+        resolvedAt: json['resolvedAt'] != null ? DateTime.tryParse(json['resolvedAt']) : null,
+        statusHistory: (json['statusHistory'] as List<dynamic>?)
+                ?.map((e) => Map<String, dynamic>.from(e))
+                .toList() ??
+            [],
+      );
 }

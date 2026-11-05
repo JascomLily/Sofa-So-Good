@@ -46,6 +46,11 @@ class InventoryService extends ChangeNotifier {
 
   List<StockAuditLog> get auditLogs => List.unmodifiable(_auditLogs);
 
+  List<StockAuditLog> getLogsForProduct(String productId) {
+    final clean = productId.toLowerCase().trim();
+    return _auditLogs.where((l) => l.productId.toLowerCase().trim() == clean).toList();
+  }
+
   // Initialize stock for product
   void initStock(String productId, int initialStock, {List<String>? colors}) {
     if (!_stockMap.containsKey(productId)) {

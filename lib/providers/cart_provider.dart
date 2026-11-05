@@ -14,21 +14,40 @@ class CartProvider extends ChangeNotifier {
   double? _deliveryDistanceKm;
   final List<VoucherModel> _vouchers = getMockVouchers();
 
+  String? _currentUserId;
+
+  String get _storageKey => _currentUserId != null
+      ? 'furni3d_cart_user_$_currentUserId'
+      : 'furni3d_cart_guest';
+
   CartProvider() {
     _loadFromStorage();
     loadVouchersFromSupabase();
   }
 
+  void setUser(String? userId) {
+    if (_currentUserId == userId) return;
+    _currentUserId = userId;
+    _loadFromStorage();
+  }
+
+  void clearCartOnLogout() {
+    _items.clear();
+    _appliedVoucher = null;
+    _currentUserId = null;
+    notifyListeners();
+  }
+
   Future<void> _loadFromStorage() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final str = prefs.getString('saved_cart_items');
+      final str = prefs.getString(_storageKey);
+      _items.clear();
       if (str != null && str.isNotEmpty) {
         final List list = jsonDecode(str);
-        _items.clear();
         _items.addAll(list.map((m) => CartItemModel.fromJson(m)));
-        notifyListeners();
       }
+      notifyListeners();
     } catch (e) {
       debugPrint('[CartProvider] load storage error: $e');
     }
@@ -38,7 +57,7 @@ class CartProvider extends ChangeNotifier {
     try {
       final prefs = await SharedPreferences.getInstance();
       final list = _items.map((i) => i.toJson()).toList();
-      await prefs.setString('saved_cart_items', jsonEncode(list));
+      await prefs.setString(_storageKey, jsonEncode(list));
     } catch (e) {
       debugPrint('[CartProvider] save storage error: $e');
     }

@@ -1,3 +1,4 @@
+import '../services/inventory_service.dart';
 class ProductReviewItem {
   final String id;
   final String orderCode;
@@ -100,8 +101,9 @@ class ProductModel {
         colors = colors ?? ['Gỗ sồi tự nhiên', 'Gỗ óc chó', 'Trắng Bắc Âu'],
         reviews = reviews ?? [];
 
-  bool get isOutOfStock => stockQuantity <= 0;
-  bool get isAvailable => stockQuantity > 0;
+  int get liveStock => InventoryService().getStock(id);
+  bool get isOutOfStock => liveStock <= 0;
+  bool get isAvailable => liveStock > 0;
 
   // Active reviews that are not soft-deleted
   List<ProductReviewItem> get activeReviews =>
@@ -109,14 +111,14 @@ class ProductModel {
 
   double get calculatedRating {
     final active = activeReviews;
-    if (active.isEmpty) return rating;
+    if (active.isEmpty) return 5.0;
     final total = active.fold<int>(0, (sum, r) => sum + r.stars);
     return double.parse((total / active.length).toStringAsFixed(1));
   }
 
   int get calculatedReviewCount {
     final active = activeReviews;
-    return active.isEmpty ? reviewCount : active.length;
+    return active.length;
   }
 
   ProductModel copyWith({

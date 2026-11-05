@@ -188,10 +188,19 @@ class _PartsScreenState extends State<PartsScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(step.title, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
-                                  Text(step.time, style: const TextStyle(fontSize: 10, color: Colors.grey)),
+                                  Expanded(
+                                    child: Text(
+                                      step.title,
+                                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, height: 1.3),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    step.time,
+                                    style: const TextStyle(fontSize: 10, color: Colors.grey),
+                                  ),
                                 ],
                               ),
                               const SizedBox(height: 2),
@@ -254,8 +263,9 @@ class _PartsScreenState extends State<PartsScreen> {
       userPartsOrders = [];
     } else {
       userPartsOrders = orderProv.orders.where((o) {
-        final isOwner = (user.phone.isNotEmpty && o.receiverPhone == user.phone) ||
-            (user.name.isNotEmpty && o.receiverName == user.name);
+        final isOwner = o.userId == user.id ||
+            (o.userId == null && ((user.phone.isNotEmpty && o.receiverPhone == user.phone) ||
+                                  (user.name.isNotEmpty && o.receiverName == user.name)));
         if (!isOwner) return false;
 
         // Is either replacement order or has spare parts items

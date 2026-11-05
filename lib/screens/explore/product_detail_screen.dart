@@ -50,6 +50,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     final currencyFormatter = NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
     final cart = Provider.of<CartProvider>(context, listen: false);
     final auth = Provider.of<AuthProvider>(context);
+    final productProv = Provider.of<ProductProvider>(context);
+    final currentProduct = productProv.products.firstWhere(
+      (p) => p.id == widget.product.id,
+      orElse: () => widget.product,
+    );
     
     return Scaffold(
       backgroundColor: AppTheme.background,
@@ -182,16 +187,25 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.star, color: Color(0xFFF59E0B), size: 16),
-                              const SizedBox(width: 4),
-                              Text(
-                                '${widget.product.rating}',
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppTheme.textPrimary),
-                              ),
-                              Text(
-                                ' (${widget.product.reviewCount})',
-                                style: const TextStyle(fontSize: 11, color: AppTheme.textMuted),
-                              ),
+                              if (currentProduct.calculatedReviewCount > 0) ...[
+                                const Icon(Icons.star, color: Color(0xFFF59E0B), size: 16),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '${currentProduct.calculatedRating}',
+                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppTheme.textPrimary),
+                                ),
+                                Text(
+                                  ' (${currentProduct.calculatedReviewCount})',
+                                  style: const TextStyle(fontSize: 11, color: AppTheme.textMuted),
+                                ),
+                              ] else ...[
+                                const Icon(Icons.star_border, color: AppTheme.woodDark, size: 16),
+                                const SizedBox(width: 4),
+                                const Text(
+                                  'Chưa có đánh giá',
+                                  style: TextStyle(fontSize: 11, color: AppTheme.textSecondary, fontWeight: FontWeight.w600),
+                                ),
+                              ],
                             ],
                           ),
                         ),

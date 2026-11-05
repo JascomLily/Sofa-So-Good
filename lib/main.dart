@@ -7,6 +7,8 @@ import 'providers/order_provider.dart';
 import 'providers/missing_report_provider.dart';
 import 'services/inventory_service.dart';
 import 'screens/main_navigation_screen.dart';
+import 'screens/auth/login_screen.dart';
+import 'screens/admin/admin_screen.dart';
 import 'services/supabase_service.dart';
 import 'package:flutter/services.dart';
 import 'theme/app_theme.dart';
@@ -15,17 +17,14 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SupabaseService.initialize();
 
-  await SystemChrome.setEnabledSystemUIMode(
-    SystemUiMode.manual,
-    overlays: [SystemUiOverlay.top, SystemUiOverlay.bottom],
-  );
+  await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.dark,
       statusBarBrightness: Brightness.light,
-      systemNavigationBarColor: Color(0xFFFBF8F5),
+      systemNavigationBarColor: Colors.transparent,
       systemNavigationBarIconBrightness: Brightness.dark,
       systemNavigationBarDividerColor: Colors.transparent,
     ),
@@ -51,10 +50,34 @@ class SofaSoGoodApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Sofa so good',
+      title: 'SOFA SO GOOD',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      home: const MainNavigationScreen(),
+      home: const AppRootGate(),
     );
+  }
+}
+
+class AppRootGate extends StatelessWidget {
+  const AppRootGate({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final auth = Provider.of<AuthProvider>(context);
+
+    // Mục 5: Bắt buộc đăng nhập mới xem được sản phẩm
+    // Nếu chưa đăng nhập hoặc bị vô hiệu hóa -> mở thẳng LoginScreen gốc (không back, pop thoát app)
+    if (!auth.isLoggedIn || auth.currentUser == null) {
+      return const LoginScreen(isRootScreen: true);
+    }
+
+    // Phân quyền theo vai trò chuẩn:
+    // Admin -> Kênh quản trị riêng biệt
+    // Khách hàng -> Trang chủ & Mua sắm
+    if (auth.isAdmin) {
+      return const AdminScreen();
+    }
+
+    return const MainNavigationScreen();
   }
 }

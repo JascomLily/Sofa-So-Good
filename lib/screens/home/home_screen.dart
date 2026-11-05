@@ -705,20 +705,36 @@ class _HomeScreenState extends State<HomeScreen> {
                                 const SizedBox(height: 3),
                                 Row(
                                   children: [
-                                    const Icon(
-                                      Icons.star,
-                                      size: 12,
-                                      color: Colors.amber,
-                                    ),
-                                    const SizedBox(width: 2),
-                                    Text(
-                                      '${product.rating}',
-                                      style: const TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.bold,
-                                        color: AppTheme.textPrimary,
+                                    if (product.calculatedReviewCount > 0) ...[
+                                      const Icon(
+                                        Icons.star,
+                                        size: 12,
+                                        color: Colors.amber,
                                       ),
-                                    ),
+                                      const SizedBox(width: 2),
+                                      Text(
+                                        '\ (\)',
+                                        style: const TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                          color: AppTheme.textPrimary,
+                                        ),
+                                      ),
+                                    ] else ...[
+                                      const Icon(
+                                        Icons.star_border,
+                                        size: 12,
+                                        color: AppTheme.wood,
+                                      ),
+                                      const SizedBox(width: 2),
+                                      const Text(
+                                        'Chưa có đánh giá',
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          color: AppTheme.textSecondary,
+                                        ),
+                                      ),
+                                    ],
                                   ],
                                 ),
                                 const SizedBox(height: 4),

@@ -1,5 +1,8 @@
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../models/order_model.dart';
 import '../models/cart_item_model.dart';
 import '../models/return_request_model.dart';
@@ -16,8 +19,84 @@ class OrderProvider extends ChangeNotifier {
 
   OrderProvider() {
     _initSampleReturns();
-    _checkAutoCompleteOrders();
+    _loadOrdersFromStorage().then((_) {
+      _checkAutoCompleteOrders();
+      _checkHangingOnlineOrders();
+    });
     loadOrdersFromSupabase();
+  }
+
+  Future<void> _loadOrdersFromStorage() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final str = prefs.getString('furni3d_all_orders_v2');
+      if (str != null && str.isNotEmpty) {
+        final List<dynamic> list = jsonDecode(str);
+        _orders.clear();
+        for (final item in list) {
+          _orders.add(OrderModel.fromJson(Map<String, dynamic>.from(item)));
+        }
+      }
+    } catch (e) {
+      debugPrint('[OrderProvider] _loadOrdersFromStorage error: ');
+    }
+    if (_orders.isEmpty) {
+      _orders.addAll(getMockOrders());
+      _saveOrdersToStorage();
+    }
+  }
+
+  Future<void> _saveOrdersToStorage() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final list = _orders.map((o) => o.toJson()).toList();
+      await prefs.setString('furni3d_all_orders_v2', jsonEncode(list));
+    } catch (e) {
+      debugPrint('[OrderProvider] _saveOrdersToStorage error: ');
+    }
+  }
+
+  void _checkHangingOnlineOrders() {
+    final now = DateTime.now();
+    bool changed = false;
+    for (final order in _orders) {
+      if (order.paymentMethod != 'COD' &&
+          order.paymentStatus == 'PENDING' &&
+          order.orderStatus == OrderStatus.choDuyet) {
+        DateTime? createdTime;
+        try {
+          final parts = order.date.split(' ');
+          if (parts.length >= 2) {
+            createdTime = DateFormat('dd/MM/yyyy HH:mm').parse(order.date);
+          }
+        } catch (_) {}
+        if (createdTime != null) {
+          final diffMinutes = now.difference(createdTime).inMinutes;
+          if (diffMinutes >= 15) {
+            order.orderStatus = OrderStatus.daHuy;
+            _revertStockOnce(order, 'Tự động hủy đơn hàng online quá 15 phút không hoàn tất thanh toán');
+            order.statusHistory.add({
+              'from': OrderStatus.choDuyet.code,
+              'to': OrderStatus.daHuy.code,
+              'actor': 'system_auto_cancel_15m',
+              'timestamp': now.toIso8601String(),
+              'reason': 'Giao dịch trực tuyến quá hạn 15 phút',
+            });
+            changed = true;
+          }
+        }
+      }
+    }
+    if (changed) {
+      _saveOrdersToStorage();
+      notifyListeners();
+    }
+  }
+
+  List<OrderModel> getOrdersForUser(String? userId, bool isAdmin) {
+    if (isAdmin) return List.unmodifiable(_orders);
+    if (userId == null || userId.isEmpty) return const [];
+    return List.unmodifiable(_orders.where((o) => o.userId == userId).toList());
   }
 
   Future<void> loadOrdersFromSupabase() async {
@@ -110,6 +189,7 @@ class OrderProvider extends ChangeNotifier {
 
   // Create new order (Atomic inventory deduction & snapshot preservation)
   OrderModel createOrder({
+    String? userId,
     required List<CartItemModel> cartItems,
     required int totalAmount,
     required String paymentMethod,
@@ -214,16 +294,21 @@ class OrderProvider extends ChangeNotifier {
 
     _orders.insert(0, newOrder);
     _activeInvoiceOrder = newOrder;
+    _saveOrdersToStorage();
     notifyListeners();
     return newOrder;
   }
 
   void addOrder(OrderModel order, {String? userId}) {
-    _orders.insert(0, order);
-    _activeInvoiceOrder = order;
+    final finalOrder = (order.userId == null && userId != null)
+        ? order.copyWith(userId: userId)
+        : order;
+    _orders.insert(0, finalOrder);
+    _activeInvoiceOrder = finalOrder;
+    _saveOrdersToStorage();
     notifyListeners();
     if (SupabaseService.isConfigured) {
-      SupabaseService.insertOrder(order, userId: userId);
+      SupabaseService.insertOrder(finalOrder, userId: userId);
     }
   }
 

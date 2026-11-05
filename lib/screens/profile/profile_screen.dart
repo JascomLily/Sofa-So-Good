@@ -665,59 +665,6 @@ class ProfileScreen extends StatelessWidget {
                   },
                 ),
               ),
-            ] else ...[
-              // FurniCoins Points Card cho khach hang
-              Container(
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  color: AppTheme.woodLight,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: AppTheme.wood.withOpacity(0.25)),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(Icons.monetization_on, color: AppTheme.woodDark, size: 28),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'VÍ ĐIỂM THƯỞNG SOFA SO GOOD',
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 0.5,
-                              color: AppTheme.woodDark,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            '${user.furniCoins} Xu',
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w900,
-                              color: AppTheme.textPrimary,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          const Text(
-                            '1 Xu = 1.000₫ • Dùng trực tiếp khi thanh toán đơn hàng',
-                            style: TextStyle(fontSize: 11, color: AppTheme.textSecondary),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
             ],
 
             const SizedBox(height: 20),

@@ -263,6 +263,7 @@ class _FurniAiAssistantScreenState extends State<FurniAiAssistantScreen> {
             child: SafeArea(
               top: false,
               bottom: true,
+              minimum: const EdgeInsets.only(bottom: 8),
               child: Container(
                 padding: const EdgeInsets.fromLTRB(14, 8, 14, 12),
                 child: Row(
@@ -350,7 +351,7 @@ class _FurniAiAssistantScreenState extends State<FurniAiAssistantScreen> {
       final significantWords = nameLower
           .replaceAll(RegExp(r'[^a-zA-Z0-9\s]'), '')
           .split(' ')
-          .where((w) => w.length >= 4)
+          .where((w) => w.length >= 3)
           .toList();
 
       for (final word in significantWords) {

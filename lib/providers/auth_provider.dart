@@ -23,8 +23,55 @@ class AuthProvider extends ChangeNotifier {
 
   AuthProvider() {
     _initSampleUsers();
-    _loadUserFromStorage();
+    _loadUsersList().then((_) {
+      _loadUserFromStorage();
+    });
     _listenToAuthChanges();
+  }
+
+  Future<void> _loadUsersList() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final usersStr = prefs.getString('furni3d_all_users_v2');
+      if (usersStr != null && usersStr.isNotEmpty) {
+        final List<dynamic> list = jsonDecode(usersStr);
+        _users.clear();
+        for (final item in list) {
+          _users.add(UserModel.fromJson(Map<String, dynamic>.from(item)));
+        }
+      }
+    } catch (e) {
+      debugPrint('[AuthProvider] _loadUsersList error: ');
+    }
+    if (_users.isEmpty) {
+      _initSampleUsers();
+      _saveUsersList();
+    }
+  }
+
+  Future<void> _saveUsersList() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final list = _users.map((u) => u.toJson()).toList();
+      await prefs.setString('furni3d_all_users_v2', jsonEncode(list));
+    } catch (e) {
+      debugPrint('[AuthProvider] _saveUsersList error: ');
+    }
+  }
+
+  bool checkCurrentUserStatus() {
+    if (_currentUser == null) return false;
+    final index = _users.indexWhere((u) => u.id == _currentUser!.id);
+    if (index != -1) {
+      final matched = _users[index];
+      if (matched.isBanned || !matched.isActive) {
+        _currentUser = null;
+        _saveUserToStorage();
+        notifyListeners();
+        return false;
+      }
+    }
+    return true;
   }
 
   void _listenToAuthChanges() {
@@ -97,6 +144,7 @@ class AuthProvider extends ChangeNotifier {
   }
 
   void _initSampleUsers() {
+    _users.clear();
     _users.addAll([
       getInitialUser(),
       UserModel(
@@ -161,6 +209,13 @@ class AuthProvider extends ChangeNotifier {
 
       // 2. Đọc từ bộ nhớ SharedPreferences máy
       final prefs = await SharedPreferences.getInstance();
+      final rememberMe = prefs.getBool('furni3d_remember_me') ?? true;
+      if (!rememberMe) {
+        _currentUser = null;
+        await prefs.remove('furni3d_current_user');
+        notifyListeners();
+        return;
+      }
       final userStr = prefs.getString('furni3d_current_user');
       if (userStr != null) {
         _currentUser = UserModel.fromJson(jsonDecode(userStr));
@@ -202,10 +257,15 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> _saveUserToStorage() async {
+  Future<void> _saveUserToStorage({bool forceClear = false}) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      if (_currentUser != null) {
+      if (forceClear || _currentUser == null) {
+        await prefs.remove('furni3d_current_user');
+        return;
+      }
+      final rememberMe = prefs.getBool('furni3d_remember_me') ?? true;
+      if (rememberMe) {
         await prefs.setString(
             'furni3d_current_user', jsonEncode(_currentUser!.toJson()));
       } else {
@@ -214,7 +274,9 @@ class AuthProvider extends ChangeNotifier {
     } catch (_) {}
   }
 
-  Future<bool> login(String email, String password) async {
+  Future<bool> login(String email, String password, {bool rememberMe = true}) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('furni3d_remember_me', rememberMe);
     _isLoading = true;
     notifyListeners();
 
@@ -617,6 +679,7 @@ class AuthProvider extends ChangeNotifier {
       _saveUserToStorage();
     }
 
+    _saveUsersList();
     notifyListeners();
     return true;
   }

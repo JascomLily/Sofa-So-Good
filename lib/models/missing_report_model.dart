@@ -1,5 +1,6 @@
 class MissingReportModel {
   final String id;
+  final String? userId;
   final String orderCode;
   final String productName;
   final String partName;
@@ -12,6 +13,7 @@ class MissingReportModel {
 
   MissingReportModel({
     required this.id,
+    this.userId,
     required this.orderCode,
     required this.productName,
     required this.partName,
@@ -25,6 +27,7 @@ class MissingReportModel {
 
   MissingReportModel copyWith({
     String? id,
+    String? userId,
     String? orderCode,
     String? productName,
     String? partName,
@@ -37,6 +40,7 @@ class MissingReportModel {
   }) {
     return MissingReportModel(
       id: id ?? this.id,
+      userId: userId ?? this.userId,
       orderCode: orderCode ?? this.orderCode,
       productName: productName ?? this.productName,
       partName: partName ?? this.partName,
@@ -48,4 +52,32 @@ class MissingReportModel {
       adminNote: adminNote ?? this.adminNote,
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'userId': userId,
+        'orderCode': orderCode,
+        'productName': productName,
+        'partName': partName,
+        'quantity': quantity,
+        'note': note,
+        'photoUrl': photoUrl,
+        'status': status,
+        'createdAt': createdAt,
+        'adminNote': adminNote,
+      };
+
+  factory MissingReportModel.fromJson(Map<String, dynamic> json) => MissingReportModel(
+        id: json['id'] ?? '',
+        userId: json['userId'],
+        orderCode: json['orderCode'] ?? '',
+        productName: json['productName'] ?? '',
+        partName: json['partName'] ?? '',
+        quantity: json['quantity'] ?? 1,
+        note: json['note'] ?? '',
+        photoUrl: json['photoUrl'] ?? '',
+        status: json['status'] ?? 'PENDING',
+        createdAt: json['createdAt'] ?? '',
+        adminNote: json['adminNote'],
+      );
 }

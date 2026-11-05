@@ -324,7 +324,9 @@ class _OrdersScreenState extends State<OrdersScreen> {
     final productProvider = Provider.of<ProductProvider>(context);
     final auth = Provider.of<AuthProvider>(context);
 
-    final allOrders = orderProvider.orders;
+    final allOrders = auth.isAdmin
+        ? orderProvider.orders
+        : orderProvider.getOrdersForUser(auth.currentUser?.id, false);
 
     // Filter list
     final filteredOrders = allOrders.where((o) {

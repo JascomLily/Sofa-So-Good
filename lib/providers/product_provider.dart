@@ -13,6 +13,7 @@ class SparePartModel {
   final String image;
   final String description;
   final String compatibleProduct;
+  final List<ProductReviewItem> reviews;
 
   SparePartModel({
     required this.id,
@@ -23,7 +24,19 @@ class SparePartModel {
     required this.image,
     required this.description,
     required this.compatibleProduct,
-  });
+    List<ProductReviewItem>? reviews,
+  }) : reviews = reviews ?? [];
+
+  List<ProductReviewItem> get activeReviews => reviews.where((r) => !r.isDeleted).toList();
+
+  double get rating {
+    final active = activeReviews;
+    if (active.isEmpty) return 5.0;
+    final total = active.fold<int>(0, (sum, r) => sum + r.stars);
+    return double.parse((total / active.length).toStringAsFixed(1));
+  }
+
+  int get reviewCount => activeReviews.length;
 
   SparePartModel copyWith({
     String? id,
@@ -34,6 +47,7 @@ class SparePartModel {
     String? image,
     String? description,
     String? compatibleProduct,
+    List<ProductReviewItem>? reviews,
   }) {
     return SparePartModel(
       id: id ?? this.id,
@@ -44,6 +58,7 @@ class SparePartModel {
       image: image ?? this.image,
       description: description ?? this.description,
       compatibleProduct: compatibleProduct ?? this.compatibleProduct,
+      reviews: reviews ?? List.from(this.reviews),
     );
   }
 }
@@ -86,7 +101,30 @@ class ProductProvider extends ChangeNotifier {
     }
   }
 
-  List<ProductModel> get products => List.unmodifiable(_products);
+  List<ProductModel> get products {
+    for (final p in _products) {
+      p.stockQuantity = InventoryService().getStock(p.id);
+    }
+    return List.unmodifiable(_products);
+  }
+
+  int getProductStock(String productId) {
+    return InventoryService().getStock(productId);
+  }
+
+  void updateProductStock(String productId, int newStock) {
+    final safeStock = newStock < 0 ? 0 : newStock;
+    final index = _products.indexWhere((p) => p.id == productId);
+    if (index != -1) {
+      _products[index].stockQuantity = safeStock;
+      InventoryService().updateStock(
+        productId: productId,
+        newQuantity: safeStock,
+        reason: 'Admin cập nhật tồn kho sản phẩm',
+      );
+      notifyListeners();
+    }
+  }
   List<SparePartModel> get spareParts {
     return _spareParts.map((sp) {
       final liveStock = InventoryService().getStock(sp.id);
@@ -190,19 +228,6 @@ class ProductProvider extends ChangeNotifier {
 
   // UPDATE Stock directly (Mục 3A)
   void updateStock(String productId, int newStock) => updateProductStock(productId, newStock);
-  void updateProductStock(String productId, int newStock) {
-    final index = _products.indexWhere((p) => p.id == productId);
-    if (index != -1) {
-      final safeStock = newStock < 0 ? 0 : newStock;
-      _products[index].stockQuantity = safeStock;
-      InventoryService().updateStock(
-        productId: productId,
-        newQuantity: safeStock,
-        reason: 'Admin chỉnh sửa số lượng tồn kho',
-      );
-      notifyListeners();
-    }
-  }
 
   // DELETE Product
   void deleteProduct(String id) {
@@ -252,6 +277,25 @@ class ProductProvider extends ChangeNotifier {
         review.deletedBy = adminId;
         _products[pIdx].rating = _products[pIdx].calculatedRating;
         _products[pIdx].reviewCount = _products[pIdx].calculatedReviewCount;
+        notifyListeners();
+      }
+    }
+  }
+
+  void softDeleteSparePartReview(
+    String partId,
+    String reviewId, {
+    required String adminId,
+    String? reason,
+  }) {
+    final pIdx = _spareParts.indexWhere((p) => p.id == partId);
+    if (pIdx != -1) {
+      final rIdx = _spareParts[pIdx].reviews.indexWhere((r) => r.id == reviewId);
+      if (rIdx != -1) {
+        final review = _spareParts[pIdx].reviews[rIdx];
+        review.isDeleted = true;
+        review.deletedAt = DateTime.now();
+        review.deletedBy = adminId;
         notifyListeners();
       }
     }

@@ -13,6 +13,7 @@ import '../../models/user_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/order_provider.dart';
 import '../../providers/product_provider.dart';
+import '../../services/inventory_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/media_viewer_dialog.dart';
 import '../../widgets/product_image_view.dart';
@@ -28,11 +29,16 @@ class _AdminScreenState extends State<AdminScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
-  // Tab 1 filters
+  // Tab 1 filters (Sản phẩm)
   String _productStockFilter = 'all'; // all, in_stock, out_of_stock
   String _productSearchQuery = '';
 
-  // Tab 2 filters
+  // Tab 2 filters (Linh kiện - Mục 4)
+  String _partStockFilter = 'all'; // all, in_stock, low_stock, out_of_stock
+  String _partSearchQuery = '';
+  static const int lowStockThreshold = 5;
+
+  // Tab 3 filters
   String _customerFilter = 'all'; // all, active, banned
   String _customerSearchQuery = '';
 
@@ -67,8 +73,8 @@ class _AdminScreenState extends State<AdminScreen>
   @override
   void initState() {
     super.initState();
-    // EXACTLY 4 TABS: 1. Sản phẩm, 2. Khách hàng, 3. Đơn mua, 4. Yêu cầu hoàn trả & cấp bù
-    _tabController = TabController(length: 4, vsync: this);
+    // 5 TABS: 1. Sản phẩm, 2. Linh kiện, 3. Khách hàng, 4. Đơn mua, 5. Hoàn trả & Cấp bù (Mục 4)
+    _tabController = TabController(length: 5, vsync: this);
   }
 
   @override
@@ -160,16 +166,20 @@ class _AdminScreenState extends State<AdminScreen>
               text: 'Sản phẩm',
             ),
             const Tab(
+              icon: Icon(Icons.build_circle_outlined, size: 18),
+              text: 'Linh kiện',
+            ),
+            const Tab(
               icon: Icon(Icons.people_outline, size: 18),
               text: 'Khách hàng',
             ),
             Tab(
               icon: const Icon(Icons.receipt_long_outlined, size: 18),
-              text: pendingOrdersCount > 0 ? 'Đơn mua ($pendingOrdersCount mới)' : 'Đơn mua',
+              text: pendingOrdersCount > 0 ? 'Đơn mua ($pendingOrdersCount)' : 'Đơn mua',
             ),
             Tab(
               icon: const Icon(Icons.assignment_return_outlined, size: 18),
-              text: pendingReturnsCount > 0 ? 'Hoàn trả & Cấp bù ($pendingReturnsCount)' : 'Hoàn trả & Cấp bù',
+              text: pendingReturnsCount > 0 ? 'Cấp bù ($pendingReturnsCount)' : 'Cấp bù & Hoàn',
             ),
           ],
         ),
@@ -178,6 +188,7 @@ class _AdminScreenState extends State<AdminScreen>
         controller: _tabController,
         children: [
           _buildProductsTab(),
+          _buildSparePartsTab(),
           _buildCustomersTab(),
           _buildOrdersTab(),
           _buildReturnsTab(),
@@ -1116,16 +1127,23 @@ class _AdminScreenState extends State<AdminScreen>
                       const SizedBox(height: 8),
 
                       // Total & Payment info
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            'Thanh toán: ${order.paymentMethod} (${order.paymentStatus})',
-                            style: const TextStyle(fontSize: 11, color: Colors.blueGrey, fontWeight: FontWeight.w500),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text('Trạng thái thanh toán:', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                              Text(
+                                'Tổng cộng: ${currencyFormatter.format(order.totalAmount)}',
+                                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppTheme.primary),
+                              ),
+                            ],
                           ),
+                          const SizedBox(height: 3),
                           Text(
-                            'Tổng cộng: ${currencyFormatter.format(order.totalAmount)}',
-                            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppTheme.primary),
+                            order.paymentStatusVietnamese,
+                            style: const TextStyle(fontSize: 11, color: Color(0xFF2C1810), fontWeight: FontWeight.w600),
                           ),
                         ],
                       ),
@@ -1195,7 +1213,7 @@ class _AdminScreenState extends State<AdminScreen>
                               onPressed: () {
                                 orderProv.advanceOrderStatusByAdmin(order.id, adminId: auth.currentUser?.id ?? 'admin');
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Đã duyệt đơn #${order.code} thành công!')),
+                                  SnackBar(content: Text('Đã duyệt đơn ${order.displayCode} thành công!')),
                                 );
                               },
                             ),
@@ -1212,7 +1230,7 @@ class _AdminScreenState extends State<AdminScreen>
                               onPressed: () {
                                 orderProv.advanceOrderStatusByAdmin(order.id, adminId: auth.currentUser?.id ?? 'admin');
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Đơn #${order.code} đã sẵn sàng xuất kho!')),
+                                  SnackBar(content: Text('Đơn ${order.displayCode} đã sẵn sàng xuất kho!')),
                                 );
                               },
                             ),
@@ -1229,29 +1247,34 @@ class _AdminScreenState extends State<AdminScreen>
                               onPressed: () {
                                 orderProv.advanceOrderStatusByAdmin(order.id, adminId: auth.currentUser?.id ?? 'admin');
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Đơn #${order.code} đã bàn giao cho Shipper!')),
+                                  SnackBar(content: Text('Đơn ${order.displayCode} đã bàn giao cho Shipper!')),
                                 );
                               },
                             ),
                           ] else if (status == OrderStatus.dangGiao) ...[
                             // STRICT: Admin CANNOT complete order. Only customer can confirm!
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: Colors.orange.shade50,
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: Colors.orange.shade200),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(Icons.hourglass_top, size: 13, color: Colors.orange.shade800),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    'Đang giao hàng • Chờ khách xác nhận (hoặc tự động sau 7 ngày)',
-                                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.orange.shade900),
-                                  ),
-                                ],
+                            Expanded(
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: Colors.orange.shade50,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: Colors.orange.shade200),
+                                ),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Icon(Icons.hourglass_top, size: 14, color: Colors.orange.shade800),
+                                    const SizedBox(width: 6),
+                                    Expanded(
+                                      child: Text(
+                                        'Đang giao hàng • Chờ khách xác nhận (hoặc tự động sau 7 ngày)',
+                                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.orange.shade900, height: 1.3),
+                                        softWrap: true,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           ] else if (status == OrderStatus.giaoThanhCong) ...[
@@ -1719,6 +1742,30 @@ class _AdminScreenState extends State<AdminScreen>
   // ==========================================================================
   // HELPER WIDGETS & DIALOGS
   // ==========================================================================
+
+  Widget _buildKpiChip(String label, Color color, bool selected, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: selected ? color.withOpacity(0.15) : Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: selected ? color : Colors.grey.shade300, width: selected ? 1.5 : 1.0),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+            color: selected ? color : Colors.grey.shade700,
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildFilterChoiceChip({
     required String label,
     required bool selected,
@@ -2515,4 +2562,524 @@ class _AdminScreenState extends State<AdminScreen>
       ),
     );
   }
+
+  // ==========================================================================
+  // TAB 2: QUẢN LÝ LINH KIỆN THAY THẾ (MỤC 4 - ADMIN THEO DÕI LINH KIỆN)
+  // ==========================================================================
+  Widget _buildSparePartsTab() {
+    final productProv = Provider.of<ProductProvider>(context);
+    final currencyFormatter = NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
+    final allParts = productProv.spareParts;
+
+    final inStockCount = allParts.where((p) => (p.stock ?? 0) > lowStockThreshold).length;
+    final lowStockCount = allParts.where((p) => (p.stock ?? 0) > 0 && (p.stock ?? 0) <= lowStockThreshold).length;
+    final outOfStockCount = allParts.where((p) => (p.stock ?? 0) == 0).length;
+
+    var filtered = allParts.where((p) {
+      if (_partStockFilter == 'in_stock') return (p.stock ?? 0) > lowStockThreshold;
+      if (_partStockFilter == 'low_stock') return (p.stock ?? 0) > 0 && (p.stock ?? 0) <= lowStockThreshold;
+      if (_partStockFilter == 'out_of_stock') return (p.stock ?? 0) == 0;
+      return true;
+    }).toList();
+
+    if (_partSearchQuery.trim().isNotEmpty) {
+      final q = _partSearchQuery.trim().toLowerCase();
+      filtered = filtered.where((p) =>
+          p.name.toLowerCase().contains(q) ||
+          p.code.toLowerCase().contains(q) ||
+          p.compatibleProduct.toLowerCase().contains(q)).toList();
+    }
+
+    filtered.sort((a, b) => (a.stock ?? 0).compareTo(b.stock ?? 0));
+
+    return Column(
+      children: [
+        // Top KPI / status count summary
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          color: Colors.white,
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                _buildKpiChip('Tất cả (${allParts.length})', Colors.blueGrey, _partStockFilter == 'all', () {
+                  setState(() => _partStockFilter = 'all');
+                }),
+                const SizedBox(width: 8),
+                _buildKpiChip('Còn hàng ($inStockCount)', Colors.green, _partStockFilter == 'in_stock', () {
+                  setState(() => _partStockFilter = 'in_stock');
+                }),
+                const SizedBox(width: 8),
+                _buildKpiChip('Sắp hết <=5 ($lowStockCount)', Colors.orange.shade800, _partStockFilter == 'low_stock', () {
+                  setState(() => _partStockFilter = 'low_stock');
+                }),
+                const SizedBox(width: 8),
+                _buildKpiChip('Hết hàng ($outOfStockCount)', Colors.red, _partStockFilter == 'out_of_stock', () {
+                  setState(() => _partStockFilter = 'out_of_stock');
+                }),
+              ],
+            ),
+          ),
+        ),
+
+        // Search Bar
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          color: Colors.white,
+          child: TextField(
+            decoration: InputDecoration(
+              hintText: 'Tìm theo tên linh kiện, mã linh kiện, mẫu bàn...',
+              hintStyle: const TextStyle(fontSize: 12),
+              prefixIcon: const Icon(Icons.search, size: 18),
+              suffixIcon: _partSearchQuery.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.clear, size: 16),
+                      onPressed: () => setState(() => _partSearchQuery = ''),
+                    )
+                  : null,
+              filled: true,
+              fillColor: const Color(0xFFF6F8FA),
+              contentPadding: const EdgeInsets.symmetric(vertical: 8),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide.none,
+              ),
+            ),
+            onChanged: (val) => setState(() => _partSearchQuery = val),
+          ),
+        ),
+
+        const Divider(height: 1),
+
+        // List of Spare Parts
+        Expanded(
+          child: filtered.isEmpty
+              ? const Center(
+                  child: Text('Không tìm thấy linh kiện phù hợp', style: TextStyle(color: Colors.grey)),
+                )
+              : ListView.separated(
+                  padding: const EdgeInsets.all(12),
+                  itemCount: filtered.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 10),
+                  itemBuilder: (ctx, idx) {
+                    final part = filtered[idx];
+                    final stock = part.stock ?? 0;
+                    final isOutOfStock = stock == 0;
+                    final isLowStock = stock > 0 && stock <= lowStockThreshold;
+
+                    return Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: isOutOfStock
+                              ? Colors.red.shade200
+                              : (isLowStock ? Colors.orange.shade200 : const Color(0xFFE8DFD5)),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.02),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: ProductImageView(
+                                  imageUrl: part.image,
+                                  width: 60,
+                                  height: 60,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            part.name,
+                                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 6),
+                                        // Stock status badge
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                                          decoration: BoxDecoration(
+                                            color: isOutOfStock
+                                                ? Colors.red.shade50
+                                                : (isLowStock ? Colors.orange.shade50 : Colors.green.shade50),
+                                            borderRadius: BorderRadius.circular(6),
+                                            border: Border.all(
+                                              color: isOutOfStock
+                                                  ? Colors.red.shade300
+                                                  : (isLowStock ? Colors.orange.shade300 : Colors.green.shade300),
+                                            ),
+                                          ),
+                                          child: Text(
+                                            isOutOfStock
+                                                ? 'Hết hàng'
+                                                : (isLowStock ? 'Sắp hết: $stock' : 'Còn hàng: $stock'),
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.bold,
+                                              color: isOutOfStock
+                                                  ? Colors.red.shade900
+                                                  : (isLowStock ? Colors.orange.shade900 : Colors.green.shade900),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text('Mã: ${part.code}', style: const TextStyle(fontSize: 11, color: Colors.blueGrey)),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      'Tương thích: ${part.compatibleProduct}',
+                                      style: const TextStyle(fontSize: 11, color: Colors.grey),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          currencyFormatter.format(part.price),
+                                          style: const TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.bold,
+                                            color: Color(0xFF805528),
+                                          ),
+                                        ),
+                                        Row(
+                                          children: [
+                                            const Icon(Icons.star, size: 12, color: Colors.amber),
+                                            const SizedBox(width: 2),
+                                            Text(
+                                              '${part.rating} (${part.reviewCount} đánh giá)',
+                                              style: const TextStyle(fontSize: 10, color: Colors.grey),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const Divider(height: 16),
+                          // Action buttons
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              OutlinedButton.icon(
+                                style: OutlinedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                  side: const BorderSide(color: Color(0xFF805528)),
+                                  foregroundColor: const Color(0xFF805528),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                ),
+                                icon: const Icon(Icons.history, size: 14),
+                                label: const Text('Lịch sử kho', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                                onPressed: () => _showPartStockHistoryDialog(context, part),
+                              ),
+                              const SizedBox(width: 8),
+                              OutlinedButton.icon(
+                                style: OutlinedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                  side: const BorderSide(color: Colors.blueGrey),
+                                  foregroundColor: Colors.blueGrey,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                ),
+                                icon: const Icon(Icons.rate_review_outlined, size: 14),
+                                label: const Text('Đánh giá', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                                onPressed: () => _showPartReviewsDialog(context, part),
+                              ),
+                              const SizedBox(width: 8),
+                              ElevatedButton.icon(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF2C1810),
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                ),
+                                icon: const Icon(Icons.edit, size: 14),
+                                label: const Text('Sửa tồn kho', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                                onPressed: () => _showEditPartStockDialog(context, part, productProv),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+        ),
+      ],
+    );
+  }
+
+  void _showPartStockHistoryDialog(BuildContext context, SparePartModel part) {
+    final logs = InventoryService().getLogsForProduct(part.id);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            const Icon(Icons.history, color: Color(0xFF805528), size: 22),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Lịch sử tồn kho: ${part.name}',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+              ),
+            ),
+          ],
+        ),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: logs.isEmpty
+              ? const Padding(
+                  padding: EdgeInsets.all(20),
+                  child: Center(
+                    child: Text('Chưa có phát sinh biến động kho nào cho linh kiện này.',
+                        style: TextStyle(fontSize: 12, color: Colors.grey)),
+                  ),
+                )
+              : ListView.separated(
+                  shrinkWrap: true,
+                  itemCount: logs.length,
+                  separatorBuilder: (_, __) => const Divider(height: 12),
+                  itemBuilder: (_, i) {
+                    final l = logs[i];
+                    final isPositive = l.changeAmount > 0;
+                    return Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: isPositive ? Colors.green.shade50 : Colors.red.shade50,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            isPositive ? '+${l.changeAmount}' : '${l.changeAmount}',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 11,
+                              color: isPositive ? Colors.green.shade900 : Colors.red.shade900,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(l.reason, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Còn lại: ${l.remainingStock} • ${DateFormat('dd/MM/yyyy HH:mm').format(l.timestamp)}',
+                                style: const TextStyle(fontSize: 10, color: Colors.grey),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+        ),
+        actions: [
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF2C1810),
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Đóng'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showPartReviewsDialog(BuildContext context, SparePartModel part) {
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    final productProv = Provider.of<ProductProvider>(context, listen: false);
+    final reviews = part.activeReviews;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            const Icon(Icons.rate_review_outlined, color: Color(0xFF805528), size: 22),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Đánh giá linh kiện: ${part.name}',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              ),
+            ),
+          ],
+        ),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: reviews.isEmpty
+              ? const Padding(
+                  padding: EdgeInsets.all(24),
+                  child: Center(
+                    child: Text('Linh kiện này hiện chưa có đánh giá nào từ khách hàng.',
+                        style: TextStyle(fontSize: 12, color: Colors.grey)),
+                  ),
+                )
+              : ListView.separated(
+                  shrinkWrap: true,
+                  itemCount: reviews.length,
+                  separatorBuilder: (_, __) => const Divider(height: 12),
+                  itemBuilder: (_, i) {
+                    final r = reviews[i];
+                    return Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Text(r.author, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                                  const SizedBox(width: 6),
+                                  Row(
+                                    children: List.generate(
+                                      r.stars,
+                                      (_) => const Icon(Icons.star, size: 11, color: Colors.amber),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 2),
+                              Text(r.comment, style: const TextStyle(fontSize: 11, color: Color(0xFF333333))),
+                              const SizedBox(height: 2),
+                              Text(
+                                DateFormat('dd/MM/yyyy HH:mm').format(r.createdAt),
+                                style: const TextStyle(fontSize: 9, color: Colors.grey),
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          tooltip: 'Xóa đánh giá (Admin)',
+                          icon: const Icon(Icons.delete_outline, size: 16, color: Colors.red),
+                          onPressed: () {
+                            showDialog(
+                              context: ctx,
+                              builder: (dCtx) => AlertDialog(
+                                title: const Text('Xác nhận xóa đánh giá'),
+                                content: Text('Bạn có chắc chắn muốn xóa đánh giá của "${r.author}"?'),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(dCtx),
+                                    child: const Text('Hủy'),
+                                  ),
+                                  ElevatedButton(
+                                    style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+                                    onPressed: () {
+                                      productProv.softDeleteSparePartReview(
+                                        part.id,
+                                        r.id,
+                                        adminId: auth.currentUser?.id ?? 'admin',
+                                      );
+                                      Navigator.pop(dCtx);
+                                      Navigator.pop(ctx);
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(content: Text('Đã xóa đánh giá của khách hàng.')),
+                                      );
+                                    },
+                                    child: const Text('Xóa'),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    );
+                  },
+                ),
+        ),
+        actions: [
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2C1810), foregroundColor: Colors.white),
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Đóng'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showEditPartStockDialog(BuildContext context, SparePartModel part, ProductProvider prov) {
+    final ctrl = TextEditingController(text: (part.stock ?? 0).toString());
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text('Chỉnh sửa tồn kho: ${part.name}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Mã linh kiện: ${part.code}', style: const TextStyle(fontSize: 11, color: Colors.grey)),
+            const SizedBox(height: 12),
+            TextField(
+              controller: ctrl,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Số lượng tồn kho thực tế',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Hủy')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2C1810), foregroundColor: Colors.white),
+            onPressed: () {
+              final newStock = int.tryParse(ctrl.text.trim()) ?? (part.stock ?? 0);
+              prov.updateSparePartStock(part.id, newStock);
+              Navigator.pop(ctx);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Đã cập nhật tồn kho ${part.name} thành $newStock!')),
+              );
+            },
+            child: const Text('Lưu'),
+          ),
+        ],
+      ),
+    );
+  }
+
 }

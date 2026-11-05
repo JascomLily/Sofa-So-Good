@@ -678,30 +678,46 @@ class _ExploreScreenState extends State<ExploreScreen> {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      Row(
-                                        children: [
-                                          const Icon(
-                                            Icons.star,
-                                            size: 12,
-                                            color: Colors.amber,
-                                          ),
-                                          const SizedBox(width: 3),
-                                          Text(
-                                            product.rating.toString(),
-                                            style: const TextStyle(
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                          Text(
-                                            ' (${product.reviewCount})',
-                                            style: const TextStyle(
-                                              fontSize: 10,
-                                              color: AppTheme.textSecondary,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
+                                       Row(
+                                         children: [
+                                           if (product.calculatedReviewCount > 0) ...[
+                                             const Icon(
+                                               Icons.star,
+                                               size: 12,
+                                               color: Colors.amber,
+                                             ),
+                                             const SizedBox(width: 3),
+                                             Text(
+                                               product.calculatedRating.toString(),
+                                               style: const TextStyle(
+                                                 fontSize: 10,
+                                                 fontWeight: FontWeight.bold,
+                                               ),
+                                             ),
+                                             Text(
+                                               ' (${product.calculatedReviewCount})',
+                                               style: const TextStyle(
+                                                 fontSize: 10,
+                                                 color: AppTheme.textSecondary,
+                                               ),
+                                             ),
+                                           ] else ...[
+                                             const Icon(
+                                               Icons.star_border,
+                                               size: 12,
+                                               color: AppTheme.wood,
+                                             ),
+                                             const SizedBox(width: 3),
+                                             const Text(
+                                               'Chưa có đánh giá',
+                                               style: TextStyle(
+                                                 fontSize: 9,
+                                                 color: AppTheme.textSecondary,
+                                               ),
+                                             ),
+                                           ],
+                                         ],
+                                       ),
                                       const SizedBox(height: 4),
                                       Text(
                                         product.name,
