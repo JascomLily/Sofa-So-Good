@@ -210,7 +210,7 @@ class OrderModel {
     final methodUpper = paymentMethod.toUpperCase();
     final isPaid = paymentStatus.toUpperCase() == 'PAID' || orderStatus == OrderStatus.giaoThanhCong;
     if (methodUpper.contains('COD')) {
-      return isPaid ? 'Thanh toán khi nhận hàng (COD) – Đã thu tiền' : 'Thanh toán khi nhận hàng (COD) – Chưa thanh toán';
+      return isPaid ? 'Đã thanh toán (COD)' : 'Thanh toán khi nhận hàng (COD) – Chưa thanh toán';
     } else if (methodUpper.contains('VNPAY')) {
       return isPaid ? 'Đã thanh toán (Cổng VNPAY)' : 'Chờ thanh toán (VNPAY)';
     }

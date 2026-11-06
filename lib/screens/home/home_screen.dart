@@ -713,7 +713,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       ),
                                       const SizedBox(width: 2),
                                       Text(
-                                        '\ (\)',
+                                        '${product.calculatedRating} (${product.calculatedReviewCount})',
                                         style: const TextStyle(
                                           fontSize: 11,
                                           fontWeight: FontWeight.bold,

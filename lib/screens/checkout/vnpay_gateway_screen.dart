@@ -101,7 +101,7 @@ class _VnpayGatewayScreenState extends State<VnpayGatewayScreen> {
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text(
-          'Cau hinh VNPAY Sandbox',
+          'Cấu hình VNPAY Sandbox',
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
         ),
         content: Column(
@@ -127,7 +127,7 @@ class _VnpayGatewayScreenState extends State<VnpayGatewayScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Dong'),
+            child: const Text('Đóng'),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -149,7 +149,7 @@ class _VnpayGatewayScreenState extends State<VnpayGatewayScreen> {
               });
               _launchOfficialVnpayUrl();
             },
-            child: const Text('Luu & Mo lai'),
+            child: const Text('Lưu & Mở lại'),
           ),
         ],
       ),
@@ -173,7 +173,7 @@ class _VnpayGatewayScreenState extends State<VnpayGatewayScreen> {
         backgroundColor: const Color(0xFFF6F8FC),
         appBar: AppBar(
           title: const Text(
-            'Cong thanh toan VNPAY',
+            'Cổng thanh toán VNPAY',
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           ),
           backgroundColor: const Color(0xFF005BA9),
@@ -186,7 +186,7 @@ class _VnpayGatewayScreenState extends State<VnpayGatewayScreen> {
           actions: [
             IconButton(
               icon: const Icon(Icons.tune),
-              tooltip: 'Cau hinh VNPAY',
+              tooltip: 'Cấu hình VNPAY',
               onPressed: _showConfigDialog,
             ),
           ],
@@ -222,7 +222,7 @@ class _VnpayGatewayScreenState extends State<VnpayGatewayScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'DON VI THU HUONG:',
+                              'ĐƠN VỊ THỤ HƯỞNG:',
                               style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,
@@ -262,7 +262,7 @@ class _VnpayGatewayScreenState extends State<VnpayGatewayScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Ma don: ${widget.txId}',
+                          'Mã đơn: ${widget.txId}',
                           style: const TextStyle(fontSize: 12, color: Colors.grey),
                         ),
                         Row(
@@ -330,7 +330,7 @@ class _VnpayGatewayScreenState extends State<VnpayGatewayScreen> {
                     ),
                     const SizedBox(height: 16),
                     const Text(
-                      'Dang cho thanh toan tren VNPAY',
+                      'Đang chờ thanh toán trên VNPAY',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -339,7 +339,7 @@ class _VnpayGatewayScreenState extends State<VnpayGatewayScreen> {
                     ),
                     const SizedBox(height: 8),
                     const Text(
-                      'Trinh duyet thanh toan VNPAY da duoc mo. Quy khach vui long chon phuong thuc thanh toan (VNPAY-QR, The ATM / Tai khoan Ngan hang NCB, The quoc te) va xac thuc tren trang web VNPAY.',
+                      'Trình duyệt thanh toán VNPAY đã được mở. Quý khách vui lòng chọn phương thức thanh toán (VNPAY-QR, Thẻ ATM / Tài khoản Ngân hàng NCB, Thẻ quốc tế) và xác thực trên cổng VNPAY.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 12,
@@ -361,7 +361,7 @@ class _VnpayGatewayScreenState extends State<VnpayGatewayScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Thong tin The test VNPAY Sandbox (NCB):',
+                            'Thông tin Thẻ test VNPAY Sandbox (NCB):',
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
@@ -369,10 +369,10 @@ class _VnpayGatewayScreenState extends State<VnpayGatewayScreen> {
                             ),
                           ),
                           SizedBox(height: 6),
-                          Text('Ngan hang: NCB (Quoc Dan)', style: TextStyle(fontSize: 11)),
-                          Text('So the: 9704198526191432198', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
-                          Text('Ten chu the: NGUYEN VAN A | Ngay: 07/15', style: TextStyle(fontSize: 11)),
-                          Text('Mat khau OTP: 123456', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.blue)),
+                          Text('Ngân hàng: NCB (Quốc Dân)', style: TextStyle(fontSize: 11)),
+                          Text('Số thẻ: 9704198526191432198', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                          Text('Tên chủ thẻ: NGUYEN VAN A | Ngày phát hành: 07/15', style: TextStyle(fontSize: 11)),
+                          Text('Mật khẩu OTP: 123456', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.blue)),
                         ],
                       ),
                     ),
@@ -390,7 +390,7 @@ class _VnpayGatewayScreenState extends State<VnpayGatewayScreen> {
                       ),
                       icon: const Icon(Icons.launch, size: 18),
                       label: const Text(
-                        'Mo lai cong thanh toan VNPAY',
+                        'Mở lại cổng thanh toán VNPAY',
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                       onPressed: _launchOfficialVnpayUrl,
@@ -424,7 +424,7 @@ class _VnpayGatewayScreenState extends State<VnpayGatewayScreen> {
                         )
                       : const Icon(Icons.check_circle_outline, size: 20),
                   label: Text(
-                    _isProcessing ? 'Dang xac nhan don hang...' : 'Toi da thanh toan thanh cong',
+                    _isProcessing ? 'Đang xác nhận đơn hàng...' : 'Tôi đã thanh toán thành công',
                     style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                   ),
                   onPressed: _isProcessing ? null : _confirmPaymentSuccess,
@@ -438,7 +438,7 @@ class _VnpayGatewayScreenState extends State<VnpayGatewayScreen> {
                   foregroundColor: Colors.grey[700],
                 ),
                 icon: const Icon(Icons.close, size: 16),
-                label: const Text('Huy thanh toan & Quay lai'),
+                label: const Text('Hủy thanh toán & Quay lại'),
                 onPressed: _cancelPayment,
               ),
             ],

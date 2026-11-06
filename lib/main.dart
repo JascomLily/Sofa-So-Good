@@ -17,16 +17,21 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SupabaseService.initialize();
 
-  await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  // Bat che do SystemUiMode.manual voi ca hai thanh status bar (tren) va navigation bar (duoi)
+  // giup he thong Android luon danh rieng khoang trong hien thi gio/song/wifi va 3 nut dieu huong
+  await SystemChrome.setEnabledSystemUIMode(
+    SystemUiMode.manual,
+    overlays: [SystemUiOverlay.top, SystemUiOverlay.bottom],
+  );
 
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.dark,
       statusBarBrightness: Brightness.light,
-      systemNavigationBarColor: Colors.transparent,
+      systemNavigationBarColor: Colors.white,
       systemNavigationBarIconBrightness: Brightness.dark,
-      systemNavigationBarDividerColor: Colors.transparent,
+      systemNavigationBarDividerColor: Color(0xFFE8DFD5),
     ),
   );
   runApp(

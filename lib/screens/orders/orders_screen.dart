@@ -638,37 +638,40 @@ class _OrdersScreenState extends State<OrdersScreen> {
                                 children: [
                                   // Button 1: Receipt / Invoice
                                   // CRITICAL: COD NEVER shows 'Hóa đơn VNPAY'! Only VNPAY orders show VNPAY invoice.
-                                  Expanded(
-                                    child: OutlinedButton.icon(
-                                      style: OutlinedButton.styleFrom(
-                                        side: BorderSide(
-                                          color: isCOD ? const Color(0xFF805528) : const Color(0xFF005BA9),
+                                  // For COD, only show 'Biên nhận COD' once delivery is completed / paid.
+                                  if (!isCOD || status == OrderStatus.giaoThanhCong) ...[
+                                    Expanded(
+                                      child: OutlinedButton.icon(
+                                        style: OutlinedButton.styleFrom(
+                                          side: BorderSide(
+                                            color: isCOD ? const Color(0xFF805528) : const Color(0xFF005BA9),
+                                          ),
+                                          foregroundColor: isCOD ? const Color(0xFF805528) : const Color(0xFF005BA9),
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                          padding: const EdgeInsets.symmetric(vertical: 8),
                                         ),
-                                        foregroundColor: isCOD ? const Color(0xFF805528) : const Color(0xFF005BA9),
-                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                        padding: const EdgeInsets.symmetric(vertical: 8),
+                                        icon: Icon(isCOD ? Icons.receipt_outlined : Icons.receipt_long, size: 15),
+                                        label: Text(
+                                          isCOD ? 'Biên nhận COD' : 'Hóa đơn VNPAY',
+                                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                                        ),
+                                        onPressed: () {
+                                          if (isCOD) {
+                                            showDialog(
+                                              context: context,
+                                              builder: (_) => CodReceiptDialog(order: order),
+                                            );
+                                          } else {
+                                            showDialog(
+                                              context: context,
+                                              builder: (_) => VnpayInvoiceDialog(order: order),
+                                            );
+                                          }
+                                        },
                                       ),
-                                      icon: Icon(isCOD ? Icons.local_shipping_outlined : Icons.receipt_long, size: 15),
-                                      label: Text(
-                                        isCOD ? 'Phiếu thu COD' : 'Hóa đơn VNPAY',
-                                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
-                                      ),
-                                      onPressed: () {
-                                        if (isCOD) {
-                                          showDialog(
-                                            context: context,
-                                            builder: (_) => CodReceiptDialog(order: order),
-                                          );
-                                        } else {
-                                          showDialog(
-                                            context: context,
-                                            builder: (_) => VnpayInvoiceDialog(order: order),
-                                          );
-                                        }
-                                      },
                                     ),
-                                  ),
-                                  const SizedBox(width: 8),
+                                    const SizedBox(width: 8),
+                                  ],
 
                                   // Button 2: State-dependent customer action
                                   // dangGiao -> [ Đã nhận được hàng ]

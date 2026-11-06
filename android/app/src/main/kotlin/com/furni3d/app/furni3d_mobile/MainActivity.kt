@@ -11,8 +11,9 @@ import io.flutter.embedding.android.FlutterActivity
 class MainActivity : FlutterActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Keep decorFitsSystemWindows false so Flutter receives window insets for SafeArea and MediaQuery
-        WindowCompat.setDecorFitsSystemWindows(window, false)
+        // Set decorFitsSystemWindows to TRUE so Android window manager automatically reserves
+        // space for the top status bar (clock/wifi/battery) and bottom navigation bar (3 system buttons)
+        WindowCompat.setDecorFitsSystemWindows(window, true)
         ensureSystemBarsVisible()
     }
 
@@ -32,7 +33,7 @@ class MainActivity : FlutterActivity() {
         window.clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
         window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
         window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION)
-        WindowCompat.setDecorFitsSystemWindows(window, false)
+        WindowCompat.setDecorFitsSystemWindows(window, true)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             val insetsController = window.insetsController

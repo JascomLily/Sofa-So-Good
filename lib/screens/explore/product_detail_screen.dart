@@ -1139,20 +1139,20 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
-                _buildFilterChip('Tất cả ()', 'all'),
+                _buildFilterChip('Tất cả (${realReviews.length})', 'all'),
                 const SizedBox(width: 8),
                 _buildFilterChip(
-                  'Có ảnh / video ()',
+                  'Có ảnh / video (${realReviews.where((r) => (r["media"] as List).isNotEmpty).length})',
                   'media',
                 ),
                 const SizedBox(width: 8),
                 _buildFilterChip(
-                  '5 sao ()',
+                  '5 sao (${realReviews.where((r) => r["stars"] == 5).length})',
                   '5star',
                 ),
                 const SizedBox(width: 8),
                 _buildFilterChip(
-                  '4 sao ()',
+                  '4 sao (${realReviews.where((r) => r["stars"] == 4).length})',
                   '4star',
                 ),
               ],
